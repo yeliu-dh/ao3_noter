@@ -79,6 +79,29 @@ function highlightText(text, noteId) {
     });
 }
 
+function highlightSelection(noteId) {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+
+    const span = document.createElement("span");
+    span.className = "ao3-highlight";
+    span.dataset.noteId = noteId;
+    span.style.background = "yellow";
+
+    try {
+        range.surroundContents(span);
+    } catch {
+        // fallback：拆开包裹（复杂情况）
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+    }
+
+    selection.removeAllRanges();
+}
+
 // ====================
 // 侧边栏
 // ====================
@@ -151,28 +174,81 @@ function addNote(text, note) {
 // ====================
 // 选中文字添加笔记
 // ====================
+// document.addEventListener("mouseup", () => {
+//     const selection = window.getSelection();
+//     if (!selection || selection.isCollapsed) return;
+//     const text = selection.toString().trim();
+//     if (!text) return;
+
+//     const note = prompt("留下一条笔记吧：");
+//     if (!note) return;
+
+//     selection.removeAllRanges();
+//     addNote(text, note);
+// });
+
 document.addEventListener("mouseup", () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
+
     const text = selection.toString().trim();
     if (!text) return;
 
     const note = prompt("留下一条笔记吧：");
     if (!note) return;
 
-    selection.removeAllRanges();
-    addNote(text, note);
+    const noteId = crypto.randomUUID();
+
+    // ⭐ 关键：先高亮选区（跨段）
+    highlightSelection(noteId);
+
+    // 再存数据
+    const data = loadData();
+    const workId = getWorkId();
+    if (!workId) return;
+
+    if (!data.works[workId]) {
+        data.works[workId] = {
+            workId,
+            author: getAuthor(),
+            title: getWorkTitle(),
+            fandom: getFandom(),
+            notes: []
+        };
+    }
+
+    data.works[workId].notes.push({
+        id: noteId,
+        chapterID: getCurrentChapterID(),
+        text,
+        note,
+        time: Date.now()
+    });
+
+    saveData(data);
+    renderNotes();
 });
+
 
 // ====================
 // 恢复高亮
 // ====================
+// function restoreHighlights() {
+//     const data = loadData();
+//     const workId = getWorkId();
+//     if (!workId || !data.works[workId]) return;
+
+//     data.works[workId].notes.forEach(n => highlightText(n.text, n.id));
+// }
 function restoreHighlights() {
     const data = loadData();
     const workId = getWorkId();
     if (!workId || !data.works[workId]) return;
 
-    data.works[workId].notes.forEach(n => highlightText(n.text, n.id));
+    data.works[workId].notes.forEach(n => {
+        // 只尝试在单个文本节点内恢复
+        highlightText(n.text, n.id);
+    });
 }
 
 // ====================
