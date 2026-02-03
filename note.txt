@@ -1,0 +1,14 @@
+JavaScript（JS）是一门编程语言
+.js 是 JavaScript 源代码文件
+
+AO3 页面已经有 UI
+
+你只加：高亮（span + CSS），一个小浮窗（textarea + button）
+
+你写的插件代码，其实是：“当我访问 AO3 页面时，偷偷运行我自己的 JS”
+
+IndexedDB = 浏览器里的“本地数据库”
+
+Manifest = 插件的“身份证 + 启动说明书”#配置文件
+
+DOM = Document Object Model
