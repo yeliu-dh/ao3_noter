@@ -1,0 +1,21 @@
+{
+    "name": "AO3 Noter",
+    "manifest_version": 3,
+    "version": "0.1",
+    "permissions": [
+        "storage"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://archiveofourown.org/works/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "style.css"
+            ]
+        }
+    ]
+}

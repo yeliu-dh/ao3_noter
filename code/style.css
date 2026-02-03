@@ -1,0 +1,31 @@
+/* 高亮样式 */
+.ao3-highlight {
+    background-color: #fff3a0;
+    cursor: pointer;
+}
+
+/* 笔记侧边栏 */
+#ao3-note-panel {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    width: 260px;
+    height: 80%;
+    background: #fafafa;
+    border-left: 1px solid #ccc;
+    padding: 8px;
+    font-size: 14px;
+    overflow-y: auto;
+    z-index: 9999;
+}
+
+#ao3-note-panel h3 {
+    margin-top: 0;
+    font-size: 16px;
+}
+
+.ao3-note-item {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+}
