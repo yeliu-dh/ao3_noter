@@ -103,7 +103,7 @@ function highlightSelection(noteId) {
 }
 
 // ====================
-// 侧边栏
+// 初始化侧边栏
 // ====================
 function createSidebar() {
     if (document.getElementById("ao3-note-panel")) return;
@@ -115,31 +115,7 @@ function createSidebar() {
 }
 
 // ====================
-// 渲染侧边栏
-// ====================
-function renderNotes() {
-    const list = document.getElementById("note-list");
-    if (!list) return;
-    list.innerHTML = "";
-
-    const data = loadData();
-    const workId = getWorkId();
-    if (!workId || !data.works[workId]) return;
-
-    data.works[workId].notes.forEach(n => {
-        const div = document.createElement("div");
-        div.className = "ao3-note-item";
-        div.innerHTML = `
-        <div><strong>原文：</strong>${n.text}</div>
-        <div><strong>笔记：</strong>${n.note}</div>
-        <div><em>章节：</em>${n.chapterID}</div>
-    `;
-        list.appendChild(div);
-    });
-}
-
-// ====================
-// 添加笔记
+// 添加/删除笔记
 // ====================
 function addNote(text, note) {
     const workId = getWorkId();
@@ -170,6 +146,154 @@ function addNote(text, note) {
     highlightText(text, noteData.id);
     renderNotes();
 }
+
+
+
+function deleteNote(noteId) {
+
+    const data = loadData();
+    const workId = getWorkId();
+    if (!data.works[workId]) return;
+
+    data.works[workId].notes =
+        data.works[workId].notes.filter(n => n.id !== noteId);
+
+    saveData(data);
+    renderNotes();
+}
+
+
+// ==================
+// 显示“多久之前写的”
+// ==================
+
+function timeAgo(t) {
+    const seconds = Math.floor((Date.now() - t) / 1000);
+
+    if (seconds < 60)
+        return `${seconds}s ago`;
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60)
+        return `${minutes} min ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24)
+        return `${hours} h ago`;
+
+    const days = Math.floor(hours / 24);
+    if (days === 1)
+        return "Yesterday";
+
+    if (days < 7)
+        return `${days} days ago`;
+
+    return new Date(t).toLocaleDateString();
+}
+
+
+// ====================
+// 渲染侧边栏
+// ====================
+function renderNotes() {
+
+    const list = document.getElementById("note-list");
+    if (!list) return;
+    list.innerHTML = "";
+
+    const data = loadData();
+    const workId = getWorkId();
+    if (!workId || !data.works[workId]) return;
+
+    const currentChapter = getCurrentChapterID();
+
+    // ===== 分组 =====
+    const groups = {};
+
+    data.works[workId].notes.forEach(n => {
+        if (!groups[n.chapterID])
+            groups[n.chapterID] = [];
+
+        groups[n.chapterID].push(n);
+    });
+
+    // ===== 渲染每个章节 =====
+    Object.entries(groups).forEach(([chapterID, notes]) => {
+
+        // 按时间排序
+        notes.sort((a, b) => a.time - b.time);
+
+        const section = document.createElement("div");
+        section.className = "chapter-group";
+
+        const header = document.createElement("div");
+        header.className = "chapter-header";
+        header.textContent = `🔵 ${chapterID} (${notes.length}) notes`;
+
+        const body = document.createElement("div");
+        body.className = "chapter-body";
+
+        // 当前章节默认展开
+        if (chapterID !== currentChapter)
+            body.style.display = "none";
+
+        // 点击折叠
+        header.onclick = () => {
+            body.style.display =
+                body.style.display === "none" ? "block" : "none";
+        };
+
+        // ===== 每条笔记 =====
+        notes.forEach(n => {
+
+            const div = document.createElement("div");
+            div.className = "ao3-note-item";
+
+            div.innerHTML = `
+                <div><strong>原文：</strong>${n.text}</div>
+                <div><strong>笔记：</strong>${n.note}</div>
+                <div style="font-size:11px;color:#888">
+                    ${timeAgo(n.time)}
+                </div>
+            `;
+
+            // 删除按钮
+            const del = document.createElement("button");
+            del.textContent = "🗑";
+            del.onclick = () => deleteNote(n.id);
+
+            div.appendChild(del);
+            body.appendChild(div);
+        });
+
+        section.appendChild(header);
+        section.appendChild(body);
+        list.appendChild(section);
+    });
+}
+
+
+// function renderNotes() {
+//     const list = document.getElementById("note-list");
+//     if (!list) return;
+//     list.innerHTML = "";
+
+//     const data = loadData();
+//     const workId = getWorkId();
+//     if (!workId || !data.works[workId]) return;
+
+//     data.works[workId].notes.forEach(n => {
+//         const div = document.createElement("div");
+//         div.className = "ao3-note-item";
+//         div.innerHTML = `
+//         <div><strong>原文：</strong>${n.text}</div>
+//         <div><strong>笔记：</strong>${n.note}</div>
+//         <div><em>章节：</em>${n.chapterID}</div>
+//     `;
+//         list.appendChild(div);
+//     });
+// }
+
 
 
 // ====================
@@ -210,9 +334,7 @@ document.addEventListener("mouseup", () => {
         chapterID: getCurrentChapterID(),
         text,
         note,
-        time: Date.now(),//非人类可读时间：1970年1月1日 00:00:00 UTC方便排序
-        human_time: new Date(note.time).toLocaleString()
-
+        time: Date.now()//非人类可读时间，只储存，不显示：1970年1月1日 00:00:00 UTC方便排序
     });
 
     saveData(data);

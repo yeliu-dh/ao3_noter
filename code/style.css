@@ -29,3 +29,21 @@
     margin-bottom: 6px;
     padding-bottom: 6px;
 }
+
+.chapter-header {
+    font-weight: bold;
+    cursor: pointer;
+    background: #eee;
+    padding: 4px;
+    margin-top: 6px;
+}
+
+.chapter-body {
+    padding-left: 6px;
+}
+
+.ao3-note-item {
+    border-left: 3px solid #ccc;
+    margin: 4px 0;
+    padding: 4px;
+}
