@@ -22,6 +22,19 @@ function getWorkTitle() {
 }
 
 // ====================
+// 获取当前章节 ID
+// ====================
+function getCurrentChapterID() {
+    const option = document.querySelector(
+        'select[name="selected_id"] option:checked'
+    );
+    if (!option) return null;
+    return option.textContent.trim()
+}
+
+
+
+// ====================
 // 数据存储
 // ====================
 function loadData() {
@@ -32,19 +45,6 @@ function saveData(data) {
     localStorage.setItem("ao3-data", JSON.stringify(data));
 }
 
-// ====================
-// 获取当前章节 ID
-// ====================
-function getCurrentChapterID() {
-    const chaptersDiv = document.getElementById("chapters");
-    if (!chaptersDiv) return null;
-    const chapterDivs = chaptersDiv.querySelectorAll("div.chapter");
-    for (const div of chapterDivs) {
-        const rect = div.getBoundingClientRect();
-        if (rect.top >= 0) return div.id;
-    }
-    return chapterDivs.length ? chapterDivs[chapterDivs.length - 1].id : null;
-}
 
 // ====================
 // 高亮文字（简单版本）
@@ -130,10 +130,10 @@ function renderNotes() {
         const div = document.createElement("div");
         div.className = "ao3-note-item";
         div.innerHTML = `
-            <div><strong>原文：</strong>${n.text}</div>
-            <div><strong>笔记：</strong>${n.note}</div>
-            <div><em>章节：</em>${n.chapterID}</div>
-        `;
+        <div><strong>原文：</strong>${n.text}</div>
+        <div><strong>笔记：</strong>${n.note}</div>
+        <div><em>章节：</em>${n.chapterID}</div>
+    `;
         list.appendChild(div);
     });
 }
@@ -158,7 +158,7 @@ function addNote(text, note) {
 
     const noteData = {
         id: crypto.randomUUID(),
-        // chapterID: getCurrentChapterID(),
+        chapterID: getCurrentChapterID(),
         text,
         note,
         time: Date.now()
@@ -171,22 +171,10 @@ function addNote(text, note) {
     renderNotes();
 }
 
+
 // ====================
 // 选中文字添加笔记
 // ====================
-// document.addEventListener("mouseup", () => {
-//     const selection = window.getSelection();
-//     if (!selection || selection.isCollapsed) return;
-//     const text = selection.toString().trim();
-//     if (!text) return;
-
-//     const note = prompt("留下一条笔记吧：");
-//     if (!note) return;
-
-//     selection.removeAllRanges();
-//     addNote(text, note);
-// });
-
 document.addEventListener("mouseup", () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -222,7 +210,9 @@ document.addEventListener("mouseup", () => {
         chapterID: getCurrentChapterID(),
         text,
         note,
-        time: Date.now()
+        time: Date.now(),//非人类可读时间：1970年1月1日 00:00:00 UTC方便排序
+        human_time: new Date(note.time).toLocaleString()
+
     });
 
     saveData(data);
@@ -233,13 +223,7 @@ document.addEventListener("mouseup", () => {
 // ====================
 // 恢复高亮
 // ====================
-// function restoreHighlights() {
-//     const data = loadData();
-//     const workId = getWorkId();
-//     if (!workId || !data.works[workId]) return;
 
-//     data.works[workId].notes.forEach(n => highlightText(n.text, n.id));
-// }
 function restoreHighlights() {
     const data = loadData();
     const workId = getWorkId();

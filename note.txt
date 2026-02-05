@@ -65,17 +65,44 @@ key = workId
 鼠标移动自动退出笔记
 默认收起侧边栏笔记
 批注样式：多颜色/标记点(DOT/PAD)，
-	特殊笔记：emojis！有点像whatsapp中给别人的消息标记一个emoji🔥, ✨，❤️, 😭, 
+	特殊笔记：emojis！有点像whatsapp中给别人的消息标记一个emoji🔥, ✨，❤️, 😭, ❣️
+
 hot，melting heart, sparkling, sad face
 
 
 点击笔记回到原文位置
 导出笔记
+分享格式？
+
 筛选分类笔记：按照fandom/时间
 任意文本搜索笔记
 自动阅读？
 按照文本顺序显示笔记！
+全文搜索
+图片笔记!
+
 
 + tags？
 
 
+=============================================
+高亮问题
+记录起止点，代替文本匹配
+
+重型方案（你现在完全不需要）
+
+像 Hypothes.is 用的是：
+
+起始节点 XPath
+
+起始 offset
+
+结束节点 XPath
+
+结束 offset
+
+再加 text quote fallback（前后几词）
+
+
+
+💬
