@@ -1,15 +1,6 @@
 // ====================== AO3 NOTER v1 =======================
 
-//-------------初始化数据库---------------
-if (!localStorage.getItem("ao3notes")) {
-    localStorage.setItem("ao3notes", JSON.stringify([]))
-    console.log("Initialized ao3notes")
-}
-
 // ======================工具函数 ========================
-// ====================
-// HELPERS
-// ====================
 function getWorkId() {
     const match = location.pathname.match(/\/works\/(\d+)/);
     return match ? match[1] : null;
@@ -34,7 +25,7 @@ function getCurrentChapterID() {
     return option ? option.value : null;
 }
 
-//main 
+// Meta main 
 function getWorkMeta() {
     const workId = getWorkId();    // 你现有函数
     const author = getAuthor();
@@ -52,62 +43,7 @@ function getWorkMeta() {
 }
 
 
-
-// function getWorkMeta() {
-//     // ------ Work ID ------
-//     const workMatch = location.pathname.match(/\/works\/(\d+)/)
-//     const workId = workMatch ? workMatch[1] : null
-
-//     // ------ Author ------
-//     const authorEl = document.querySelector("a[rel='author']")
-//     const author = authorEl
-//         ? authorEl.innerText.trim()
-//         : "Unknown Author"
-
-//     // ------ Title ------
-//     const titleEl = document.querySelector("h2.title")
-//     const title = titleEl
-//         ? titleEl.innerText.trim()
-//         : "Unknown Title"
-
-//     // ------ Fandom ------
-//     const fandomEl = document.querySelector("dd.fandom.tags a")
-//     const fandom = fandomEl
-//         ? fandomEl.innerText.trim()
-//         : "Unknown Fandom"
-
-//     // ------ Chapter ID ------
-//     const select = document.querySelector("li.chapter select[name='selected_id']")
-//     let chapterId = null
-
-//     if (select) {
-//         const option = select.querySelector("option[selected='selected']")
-//         if (option) {
-//             chapterId = option.value
-//         }
-//     }
-//     // 返回一个对象（类似 Python dict）
-//     // return {
-//     //     workId,
-//     //     author,
-//     //     title,
-//     //     fandom,
-//     //     chapterId
-//     // }
-//     return {
-//         workId: workId,
-//         author: author,
-//         title: title,
-//         fandom: fandom,
-//         chapterId: chapterId
-//     };
-
-// }
-
-
 // ---------- 获取选区所在段落 ----------
-
-
 function getEndParagraphIndexFromRange(range) {
     if (!range) return null;
 
@@ -160,8 +96,10 @@ function getEndParagraphIndexFromRange(range) {
 
 
 
-// ===========================DB储存=============================
 
+
+
+// ====================================DB储存=======================================
 const DB_NAME = "ao3notesDB";
 const DB_VERSION = 1;
 const STORE_NAME = "notes";
@@ -242,8 +180,9 @@ async function deleteNote(noteId) {
 
 
 
-// ========================== UI函数 ============================
-// ---------- Marker 渲染 ----------
+
+
+// ================================= Marker 渲染 ========================================
 function renderMarker(noteData, workId, chapterId) {
     const paragraphs = document.querySelectorAll("#workskin p");
     const idx = noteData.endParagraphIndex;
@@ -262,9 +201,10 @@ function renderMarker(noteData, workId, chapterId) {
     noteSpan.textContent = noteData.note ? " " + noteData.note : "";
     noteSpan.style.fontStyle = "italic";
     noteSpan.style.fontSize = "0.85em";
-    noteSpan.style.color = "teal";
+    noteSpan.style.color = "#880000"//"teal";
+    noteSpan.style.background = "#f0f0f0"; // 浅灰色
     noteSpan.style.marginLeft = "4px";
-    noteSpan.style.display = "none"; // 默认隐藏
+    noteSpan.style.display = "inline";//"none"; // 默认隐藏
 
     p.appendChild(marker);
     p.appendChild(noteSpan);
@@ -294,12 +234,29 @@ function renderMarker(noteData, workId, chapterId) {
         const input = document.createElement("input");
         input.type = "text";
         input.value = noteData.note || "";
+        input.fontSize = "14px"
         input.style.flex = "1";
         menu.appendChild(input);
 
+        // 按钮行
+        const btnRow = document.createElement("div");
+        btnRow.style.marginTop = "2px";   // 上下间距
+        btnRow.style.display = "flex";
+        btnRow.style.gap = "6px";          // 按钮间距
+        btnRow.style.flexWrap = "wrap";    // 手机窄屏自动换行
+
         // ===== Save 按钮 =====
+
         const saveBtn = document.createElement("button");
-        saveBtn.textContent = "Save";
+        saveBtn.textContent = "save";
+        Object.assign(saveBtn.style, {
+            cursor: "pointer",
+            color: "#880000",
+            fontSize: "14px",
+            opacity: "0.85",
+            padding: "4px 6px"
+        });
+
         saveBtn.onclick = async () => {
             noteData.note = input.value;
             noteSpan.textContent = input.value ? " " + input.value : "";
@@ -310,11 +267,18 @@ function renderMarker(noteData, workId, chapterId) {
 
             menu.remove();
         };
-        menu.appendChild(saveBtn);
 
         // ===== Delete 按钮 =====
         const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
+        delBtn.textContent = "delete";
+        Object.assign(delBtn.style, {
+            cursor: "pointer",
+            color: "#880000",
+            fontSize: "14px",
+            opacity: "0.85",
+            padding: "4px 6px"
+        });
+
         delBtn.onclick = async () => {
             marker.remove();
             noteSpan.remove();
@@ -324,17 +288,30 @@ function renderMarker(noteData, workId, chapterId) {
 
             menu.remove();
         };
-        menu.appendChild(delBtn);
 
         // ===== Show 按钮 =====
-        let showNote = false; // 默认不显示
+        let showNote = true; //false; // 默认不显示
         const showBtn = document.createElement("button");
-        showBtn.textContent = "Show";
+        showBtn.textContent = "display";
+        Object.assign(showBtn.style, {
+            cursor: "pointer",
+            color: "#880000",
+            fontSize: "14px",
+            opacity: "0.85",
+            padding: "4px 6px"
+        });
+
         showBtn.onclick = () => {
             showNote = !showNote;
             noteSpan.style.display = showNote && noteData.note ? "inline" : "none";
         };
-        menu.appendChild(showBtn);
+
+        //  三个按钮加入按钮行，按钮加入菜单，菜单加入主体
+        btnRow.appendChild(saveBtn);
+        btnRow.appendChild(delBtn);
+        btnRow.appendChild(showBtn);
+
+        menu.appendChild(btnRow);
 
         document.body.appendChild(menu);
 
@@ -358,7 +335,14 @@ async function renderNotesForChapter(workId, chapterId) {
 }
 
 
-//-------------EMOJIS ROW------------
+
+
+
+
+
+
+
+//========================================EMOJIS ROW============================================
 // LOCAL version
 const EMOJI_KEY = "ao3-emojis";
 
@@ -383,31 +367,49 @@ function saveEmojis(arr) {
 }
 
 
-
-
-
 function renderEmojiList(container) {
     container.innerHTML = "";
     const emojis = getEmojis();
+
+    Object.assign(container.style, {
+        display: "flex",
+        flexWrap: "wrap",      // 自动换行
+        gap: "6px"              // 间距
+    });
 
     emojis.forEach(e => {
         const item = document.createElement("span");
         item.textContent = e;
         item.dataset.val = e;
 
+        // 每个 emoji 固定宽度，让一行最多 5 个
         Object.assign(item.style, {
-            padding: "3px 5px",
+            width: "18%",        // ⭐ 100% / 5 ≈ 20%，留点 gap
+            textAlign: "center",
+            padding: "3px 0",
             borderRadius: "6px",
             cursor: "pointer",
             userSelect: "none",
-            fontSize: "18px"
+            fontSize: "16px",
+            boxSizing: "border-box"
         });
+
+        // emojis.forEach(e => {
+        //     const item = document.createElement("span");
+        //     item.textContent = e;
+        //     item.dataset.val = e;
+
+        //     Object.assign(item.style, {
+        //         padding: "3px 5px",
+        //         borderRadius: "6px",
+        //         cursor: "pointer",
+        //         userSelect: "none",
+        //         fontSize: "16px"
+        //     });
 
         // ⭐ 点击选择
         item.onclick = () => {
-
             item.classList.toggle("selected");
-
             if (item.classList.contains("selected")) {
                 item.style.background = "#007aff33";
             } else {
@@ -452,14 +454,15 @@ function showEmojiManager(anchor) {
     addRow.style.marginBottom = "8px";
 
     const input = document.createElement("input");
-    input.placeholder = "emoji / text";
+    input.placeholder = "Add a marker";
     input.style.flex = "1";
     input.style.border = "1px solid #ccc";
     input.style.borderRadius = "6px";
     input.style.padding = "4px";
 
-    const addBtn = document.createElement("span");
+    const addBtn = document.createElement("button");// span则无框！
     addBtn.textContent = "add";
+
     // ⭐ 无边框按钮风格
     Object.assign(addBtn.style, {
         cursor: "pointer",
@@ -469,10 +472,6 @@ function showEmojiManager(anchor) {
         padding: "4px 6px"
     });
 
-
-    // addBtn.style.cursor = "pointer";
-    // addBtn.style.padding = "4px 6px";
-    // addBtn.style.color = "#007aff";   // iOS 蓝
 
     addBtn.onclick = () => {
         const val = input.value.trim();
@@ -510,7 +509,7 @@ function showEmojiManager(anchor) {
     const delRow = document.createElement("div");
     delRow.style.textAlign = "right";
 
-    const delBtn = document.createElement("span");
+    const delBtn = document.createElement("button");// span则无框！
     delBtn.textContent = "delete";
     Object.assign(delBtn.style, {
         cursor: "pointer",
@@ -570,7 +569,7 @@ function showEmojiManager(anchor) {
 
 }
 
-
+// 选中文字后显示/渲染emojirow
 function renderEmojiRow(container) {
     container.innerHTML = "";
 
@@ -591,11 +590,18 @@ function renderEmojiRow(container) {
     // emoji manager button
     const manageBtn = document.createElement("span");
     manageBtn.textContent = " […] ";
+    Object.assign(manageBtn.style, {
+        cursor: "pointer",
+        color: "#880000",
+        fontSize: "14px",
+        opacity: "0.85",
+        padding: "4px 6px"
+    });
+
     manageBtn.onclick = () => showEmojiManager(manageBtn);
     container.appendChild(manageBtn);
 
 }
-
 
 // 找当前页面上的 emoji row，清空row，重新按 storage 渲染
 function refreshEmojiRow() {
@@ -605,8 +611,7 @@ function refreshEmojiRow() {
 
 
 
-// ============================ 逻辑函数 =============================
-// ======== 创建笔记函数 ========
+// ====================================== 创建笔记函数 ==================================
 async function createNoteWithEmoji(markerEmoji) {
     if (!currentSelectedText || currentEndParagraphIndex === null) return;
 
@@ -641,14 +646,13 @@ async function createNoteWithEmoji(markerEmoji) {
 
 
 
-// ---------- 初始化 ----------
-// ========================== 事件监听 (放最后) =======================
+// =================================== 事件监听 (放最后) ============================
 
 let emojiUI = null;
 let currentSelectedText = ""; // 全局变量，保存当前选中文字
 let currentEndParagraphIndex = null;
 
-// ======== 选区监听 ========
+// ---------------- 选区监听 -----------------
 document.addEventListener("selectionchange", () => {
     //这一段sel不会消失
 
@@ -669,7 +673,7 @@ document.addEventListener("selectionchange", () => {
 
 
 
-// ======== Emoji Row 显示函数 ========
+// ---------------- Emoji Row 显示函数 ----------------
 function showEmojiRowAtSelection(sel) {
 
     if (emojiUI) emojiUI.remove();
@@ -712,33 +716,6 @@ function showEmojiRowAtSelection(sel) {
     }
 }
 
-// // ======== Emoji Row 显示函数 ========
-// function showEmojiRowAtSelection(sel) {
-//     // console.log("Show currentSelectedText:", currentSelectedText);
-
-//     // 防止重复
-//     if (emojiUI) emojiUI.remove();
-
-//     const rect = sel.getRangeAt(0).getBoundingClientRect();
-
-//     const { row } = createEmojiRow("❤️", (emoji) => {
-//         createNoteWithEmoji(emoji);
-//         removeEmojiUI();
-//     });
-
-//     // 浮动定位
-//     row.style.position = "absolute";
-//     row.style.top = (rect.bottom + window.scrollY + 2) + "px";
-//     row.style.left = (rect.left + window.scrollX) + "px";
-//     row.style.background = "white";
-//     row.style.padding = "4px";
-//     row.style.border = "1px solid #ccc";
-//     row.style.zIndex = 9999;
-
-//     document.body.appendChild(row);
-//     emojiUI = row;
-// }
-
 function removeEmojiUI() {
     if (emojiUI) {
         emojiUI.remove();
@@ -747,62 +724,8 @@ function removeEmojiUI() {
 }
 
 
-// // 当选区变化触发+emoji选择确认
-// document.addEventListener("selectionchange", () => {
 
-//     const sel = window.getSelection()
-//     const text = sel.toString().trim()
-//     if (text.length < 1) return;
-
-//     // 保存当前选中文字
-//     currentSelectedText = text;
-
-//     // 防止重复UI
-//     if (emojiUI) return
-
-//     const range = sel.getRangeAt(0)
-//     const rect = range.getBoundingClientRect()
-
-//     const { row } = createEmojiRow("❤️", (emoji) => {
-
-//         createNoteWithEmoji(emoji)
-
-//         removeEmojiUI()
-//         sel.removeAllRanges()
-//     })
-
-//     // ⭐ 浮动定位
-//     row.style.position = "fixed"
-//     row.style.top = (rect.top - 40) + "px"
-//     row.style.left = rect.left + "px"
-//     row.style.background = "white"
-//     row.style.padding = "4px"
-//     row.style.border = "1px solid #ccc"
-//     row.style.zIndex = 9999
-
-//     document.body.appendChild(row)
-//     emojiUI = row
-// })
-
-// //点击空白或者移动emoji row消失
-// document.addEventListener("mousedown", (e) => {
-
-//     if (!emojiUI) return
-
-//     if (!emojiUI.contains(e.target)) {
-//         removeEmojiUI()
-//     }
-// })
-
-// function removeEmojiUI() {
-//     if (emojiUI) {
-//         emojiUI.remove()
-//         emojiUI = null
-//     }
-// }
-
-
-// 页面加载时重新渲染marker
+//---------------- 页面加载时重新渲染marker----------------
 
 window.addEventListener("load", async () => {
     const workId = getWorkId();
