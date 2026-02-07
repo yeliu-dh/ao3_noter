@@ -183,6 +183,34 @@ async function deleteNote(noteId) {
 
 
 // ================================= Marker 渲染 ========================================
+// 弹窗 固定在屏幕底部 (position: fixed; bottom:0)
+
+// 弹窗高度占屏幕 50%-60% (maxHeight: 60%)
+
+// 文本框使用 <textarea> 并 flex: 1 → 占面板大部分高度，内部可滚动
+
+// 按钮行靠右下 (justify-content: flex-end)
+
+// 不阻止原文滚动，用户可以上下浏览文章
+
+// 点击面板外或 marker 再点击 → 弹窗关闭
+
+function getContextText(noteData) {
+    const text = noteData.text || "";
+    const len = text.length;
+
+    const before = text.slice(0, 10); // 前10字符
+    const after = text.slice(len - 10, len); // 后10字符
+
+    if (len <= 20) {
+        // 太短就直接全部显示
+        return text;
+    } else {
+        return `${before}…${after}`;
+    }
+}
+
+
 function renderMarker(noteData, workId, chapterId) {
     const paragraphs = document.querySelectorAll("#workskin p");
     const idx = noteData.endParagraphIndex;
@@ -196,136 +224,198 @@ function renderMarker(noteData, workId, chapterId) {
     marker.style.cursor = "pointer";
     marker.style.userSelect = "none";
 
-    // 2️⃣ 创建笔记显示 span（小字体斜体），默认隐藏
+    // 2️⃣ 创建笔记显示 span（小字体斜体，浅灰背景，仅当有内容时显示）
     const noteSpan = document.createElement("span");
-    noteSpan.textContent = noteData.note ? " " + noteData.note : "";
-    noteSpan.style.fontStyle = "italic";
-    noteSpan.style.fontSize = "0.85em";
-    noteSpan.style.color = "#880000"//"teal";
-    noteSpan.style.background = "#f0f0f0"; // 浅灰色
-    noteSpan.style.marginLeft = "4px";
-    noteSpan.style.display = "inline";//"none"; // 默认隐藏
+    const hasNote = noteData.note && noteData.note.trim() !== "";
+
+    // 文本内容显示
+    noteSpan.textContent = hasNote ? " " + noteData.note.trim() : "";
+    noteSpan.style.display = hasNote ? "inline" : "none";
+
+    // 样式统一设置
+    Object.assign(noteSpan.style, {
+        fontStyle: "italic",
+        fontSize: "0.85em",
+        color: "#880000",
+        background: "#f0f0f0",
+        marginLeft: "4px",
+        padding: "1px 3px",
+        borderRadius: "3px"
+    });
+
 
     p.appendChild(marker);
     p.appendChild(noteSpan);
 
-    // 3️⃣ 点击 marker 弹出菜单
+    // 3️⃣ 点击 marker 弹出底部面板
     marker.onclick = () => {
-        // 移除已有菜单
-        const existingMenu = document.getElementById("marker-menu");
-        if (existingMenu) existingMenu.remove();
+        // 移除已有面板
+        const existingPanel = document.getElementById("marker-bottom-panel");
+        if (existingPanel) existingPanel.remove();
 
-        const menu = document.createElement("div");
-        menu.id = "marker-menu";
-        menu.style.position = "absolute";
-        menu.style.background = "white";
-        menu.style.border = "1px solid #ccc";
-        menu.style.padding = "4px";
-        menu.style.display = "flex";
-        menu.style.gap = "4px";
-        menu.style.zIndex = 9999;
+        const panel = document.createElement("div");
+        panel.id = "marker-bottom-panel";
 
-        // 定位菜单
-        const rect = marker.getBoundingClientRect();
-        menu.style.top = (rect.bottom + window.scrollY + 2) + "px";
-        menu.style.left = (rect.left + window.scrollX) + "px";
+        Object.assign(panel.style, {
+            position: "fixed",
+            bottom: "0",
+            left: "0",
+            width: "100%",
+            maxHeight: "60%",        // 占屏幕下方50%-60%
+            background: "#fff",
+            borderTop: "1px solid #ccc",
+            borderRadius: "8px 8px 0 0",
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            padding: "8px",
+            boxShadow: "0 -2px 6px rgba(0,0,0,0.2)",
+            overflow: "hidden"       // 面板内部 scroll
+        });
 
-        // ===== 文本框 =====
-        const input = document.createElement("input");
-        input.type = "text";
+
+        // ======= 上方提示 + help =======
+        const topRow = document.createElement("div");
+        Object.assign(topRow.style, {
+            display: "flex",
+            width: "98%",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "4px"
+        });
+
+        // 上方原文提示
+        const contextDiv = document.createElement("div");
+        contextDiv.textContent = getContextText(noteData);
+        Object.assign(contextDiv.style, {
+            fontSize: "12px",
+            fontStyle: "italic",
+            color: "#888",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: "1" // 占满剩余空间
+        });
+
+        // 右侧 help 图标：点击显示内容，点击空白处关闭
+        const helpIcon = document.createElement("span");
+        helpIcon.textContent = " 𝒊 ";
+        Object.assign(helpIcon.style, {
+            cursor: "help",
+            color: "#880000",
+            fontSize: "14px",
+            marginLeft: "6px",
+            flex: "0 0 auto" // 不拉伸
+        });
+        // helpIcon.title = "Save 保存，Delete 删除，Display 显示笔记";
+
+
+        // append 到同一行
+        topRow.appendChild(contextDiv);
+        topRow.appendChild(helpIcon);
+
+        // append 到面板上方
+        panel.appendChild(topRow);
+
+
+        // ===== 文本框（多行可滚动） =====
+        const input = document.createElement("textarea");
         input.value = noteData.note || "";
-        input.fontSize = "14px"
-        input.style.flex = "1";
-        menu.appendChild(input);
+        Object.assign(input.style, {
+            flex: "1",              // 占据大部分高度
+            boxSizing: "border-box",  //padding + border + width=100%容易超出，指定包含 padding 和 border
+            width: "98%",
+            resize: "none",
+            fontSize: "14px",
+            padding: "6px",
+            overflowY: "auto",
+            marginBottom: "8px",
+            borderRadius: "4px",
+            border: "1px solid #ccc"
+        });
 
-        // 按钮行
+        panel.appendChild(input);
+
+        // ===== 按钮行（靠右下） =====
         const btnRow = document.createElement("div");
-        btnRow.style.marginTop = "2px";   // 上下间距
-        btnRow.style.display = "flex";
-        btnRow.style.gap = "6px";          // 按钮间距
-        btnRow.style.flexWrap = "wrap";    // 手机窄屏自动换行
+        Object.assign(btnRow.style, {
+            display: "flex",
+            width: "98%",
+            justifyContent: "flex-end",//靠末尾
+            gap: "6px"
+        });
 
-        // ===== Save 按钮 =====
-
+        //----- save -----
         const saveBtn = document.createElement("button");
         saveBtn.textContent = "save";
         Object.assign(saveBtn.style, {
             cursor: "pointer",
             color: "#880000",
             fontSize: "14px",
-            opacity: "0.85",
+            opacity: 0.85,
             padding: "4px 6px"
         });
-
         saveBtn.onclick = async () => {
             noteData.note = input.value;
             noteSpan.textContent = input.value ? " " + input.value : "";
             if (input.value) noteSpan.style.display = "inline";
-
-            // ✅ IndexedDB 更新
             await updateNote(noteData);
-
-            menu.remove();
+            panel.remove();
         };
 
-        // ===== Delete 按钮 =====
+        //-----delete-----
         const delBtn = document.createElement("button");
         delBtn.textContent = "delete";
         Object.assign(delBtn.style, {
             cursor: "pointer",
             color: "#880000",
             fontSize: "14px",
-            opacity: "0.85",
+            opacity: 0.85,
             padding: "4px 6px"
         });
-
         delBtn.onclick = async () => {
             marker.remove();
             noteSpan.remove();
-
-            // ✅ IndexedDB 删除
             await deleteNote(noteData.noteId);
-
-            menu.remove();
+            panel.remove();
         };
 
-        // ===== Show 按钮 =====
-        let showNote = true; //false; // 默认不显示
+        //-----dislpay-----
+        let showNote = true;
         const showBtn = document.createElement("button");
         showBtn.textContent = "display";
         Object.assign(showBtn.style, {
             cursor: "pointer",
             color: "#880000",
             fontSize: "14px",
-            opacity: "0.85",
+            opacity: 0.85,
             padding: "4px 6px"
         });
-
         showBtn.onclick = () => {
             showNote = !showNote;
-            noteSpan.style.display = showNote && noteData.note ? "inline" : "none";
+            const hasNote = noteData.note && noteData.note.trim() !== "";
+            noteSpan.style.display = showNote && hasNote ? "inline" : "none";
         };
 
-        //  三个按钮加入按钮行，按钮加入菜单，菜单加入主体
         btnRow.appendChild(saveBtn);
         btnRow.appendChild(delBtn);
         btnRow.appendChild(showBtn);
+        // btnRow.appendChild(helpIcon);
 
-        menu.appendChild(btnRow);
+        panel.appendChild(btnRow);
 
-        document.body.appendChild(menu);
+        document.body.appendChild(panel);
 
-        // 点击其他地方关闭菜单
-        const closeMenu = (e) => {
-            if (!menu.contains(e.target) && e.target !== marker) {
-                menu.remove();
-                document.removeEventListener("mousedown", closeMenu);
+        // 点击面板外关闭
+        const closePanel = (e) => {
+            if (!panel.contains(e.target) && e.target !== marker) {
+                panel.remove();
+                document.removeEventListener("mousedown", closePanel);
             }
         };
-        document.addEventListener("mousedown", closeMenu);
+        document.addEventListener("mousedown", closePanel);
     };
 }
-
 
 async function renderNotesForChapter(workId, chapterId) {
     const notes = await loadNotesByWork(workId);
@@ -333,11 +423,6 @@ async function renderNotesForChapter(workId, chapterId) {
         .filter(n => n.chapterId === chapterId)  // 只渲染当前章
         .forEach(note => renderMarker(note, note.workId, note.chapterId));
 }
-
-
-
-
-
 
 
 
@@ -643,6 +728,107 @@ async function createNoteWithEmoji(markerEmoji) {
 
     console.log("New note created:", noteData);
 }
+
+
+
+
+
+// =================================== NOTE PAD ====================================
+function showNotesSummary(workId) {
+    const allNotes = JSON.parse(localStorage.getItem("ao3notes") || "{}");
+    if (!allNotes[workId]) return;
+
+    const workData = allNotes[workId];
+
+    // 创建面板
+    const panel = document.createElement("div");
+    Object.assign(panel.style, {
+        position: "fixed",
+        top: "10px",
+        right: "10px",
+        width: "90%",
+        maxHeight: "90%",
+        overflowY: "auto",
+        background: "#fff",
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+        padding: "8px",
+        zIndex: 9999,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+    });
+
+    const title = document.createElement("h3");
+    title.textContent = `${workData.title} - ${workData.author}`;
+    title.style.marginBottom = "8px";
+    panel.appendChild(title);
+
+    // 遍历章节
+    Object.keys(workData.notes).forEach(chapterId => {
+        const chapterNotes = workData.notes[chapterId];
+
+        const chapDiv = document.createElement("div");
+        chapDiv.style.marginBottom = "6px";
+
+        const chapTitle = document.createElement("div");
+        chapTitle.textContent = `Chapter ${chapterId}`;
+        chapTitle.style.fontWeight = "bold";
+        chapTitle.style.cursor = "pointer";
+
+        // 折叠章节
+        const notesContainer = document.createElement("div");
+        notesContainer.style.display = "none";
+        notesContainer.style.marginLeft = "8px";
+
+        chapTitle.onclick = () => {
+            notesContainer.style.display =
+                notesContainer.style.display === "none" ? "block" : "none";
+        };
+
+        // 每条笔记
+        chapterNotes.forEach(note => {
+            const noteDiv = document.createElement("div");
+            noteDiv.style.marginBottom = "4px";
+            noteDiv.style.padding = "2px 4px";
+            noteDiv.style.borderBottom = "1px solid #eee";
+            noteDiv.style.fontSize = "14px";
+
+            noteDiv.textContent = `${note.marker} "${note.text}" ${note.note ? `- ${note.note}` : ""}`;
+
+            // 点击可以高亮原文或者打开编辑
+            noteDiv.onclick = () => {
+                alert(`Original text: ${note.text}\nNote: ${note.note || "(empty)"}`);
+                // 可在这里复用 renderMarker menu 或跳转到原文
+            };
+
+            notesContainer.appendChild(noteDiv);
+        });
+
+        chapDiv.appendChild(chapTitle);
+        chapDiv.appendChild(notesContainer);
+        panel.appendChild(chapDiv);
+    });
+
+    document.body.appendChild(panel);
+
+    // 点击空白关闭
+    setTimeout(() => {
+        document.addEventListener("mousedown", closePanel);
+    }, 0);
+
+    function closePanel(e) {
+        if (!panel.contains(e.target)) {
+            panel.remove();
+            document.removeEventListener("mousedown", closePanel);
+        }
+    }
+}
+
+
+
+
+
+
+
 
 
 
