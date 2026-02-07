@@ -243,42 +243,154 @@ function getContextText(noteData) {
 
 function renderMarker(noteData, workId, chapterId) {
     const paragraphs = document.querySelectorAll("#workskin p");
-    const idx = noteData.endParagraphIndex;
-    if (idx === null || idx >= paragraphs.length) return;
+    const start = noteData.startParagraphIndex ?? 0;
+    const end = noteData.endParagraphIndex ?? 0;
 
-    const p = paragraphs[idx];
+    if (start >= end || end >= paragraphs.length) return;
 
-    // 1️⃣ 创建 marker span
-    const marker = document.createElement("span");
-    marker.textContent = " " + (noteData.marker || "❤️");
-    marker.style.cursor = "pointer";
-    marker.style.userSelect = "none";
-
-    // 2️⃣ 创建笔记显示 span（小字体斜体，浅灰背景，仅当有内容时显示）
-    const noteSpan = document.createElement("span");
-    const hasNote = noteData.note && noteData.note.trim() !== "";
-
-    // 文本内容显示
-    noteSpan.textContent = hasNote ? " " + noteData.note.trim() : "";
-    noteSpan.style.display = hasNote ? "inline" : "none";
-
-    // 样式统一设置
-    Object.assign(noteSpan.style, {
-        fontStyle: "italic",
-        fontSize: "0.85em",
+    // 1️⃣ 在起始段落开头插入 {
+    const startP = paragraphs[start];
+    const openBrace = document.createElement("span");
+    openBrace.textContent = "{";
+    Object.assign(openBrace.style, {
         color: "#880000",
-        background: "#f0f0f0",
-        marginLeft: "4px",
-        padding: "1px 3px",
-        borderRadius: "3px"
+        // fontWeight: "bold",
+        fontSize: "20px",
+        fontStyle: "italic",
+        marginRight: "2px",
+        userSelect: "none"
     });
+    startP.prepend(openBrace);
+
+    // 2️⃣ 在结束段落末尾插入 }
+    const endP = paragraphs[end];
+    const closeBrace = document.createElement("span");
+    closeBrace.textContent = "}";
+    Object.assign(closeBrace.style, {
+        color: "#880000",
+        // fontWeight: "bold",
+        fontSize: "20px",
+        fontStyle: "italic",
+        marginLeft: "2px",
+        userSelect: "none"
+    });
+    endP.appendChild(closeBrace);
 
 
-    p.appendChild(marker);
-    p.appendChild(noteSpan);
+    //
+    // 创建 marker + note 容器
+    const noteContainer = document.createElement("span");
+    noteContainer.style.display = "inline-flex";
+    noteContainer.style.alignItems = "center";
+    // noteContainer.style.background = "#f0f0f0"; // 浅灰背景
+    noteContainer.style.borderRadius = "4px";
+    noteContainer.style.padding = "1px 4px";
+    noteContainer.style.marginLeft = "4px";
+    noteContainer.style.cursor = "pointer";
+    noteContainer.style.userSelect = "none";
+
+    // ✅ 仅当有 note 时加背景
+    if (noteData.note && noteData.note.trim() !== "") {
+        noteContainer.style.background = "#f0f0f0"; // 浅灰背景
+    }
+    // marker
+    const marker = document.createElement("span");
+    marker.textContent = noteData.marker || "❤️";
+    noteContainer.appendChild(marker);
+
+    // note（仅当有内容时）
+    if (noteData.note && noteData.note.trim() !== "") {
+        const noteSpan = document.createElement("span");
+        noteSpan.textContent = " " + noteData.note.trim();
+        Object.assign(noteSpan.style, {
+            fontStyle: "italic",
+            fontSize: "0.85em",
+            color: "#880000"
+        });
+        noteContainer.appendChild(noteSpan);
+    }
+
+    endP.appendChild(noteContainer);
+
+
+
+    // // 3️⃣ 插入 marker + note（在结束段落末尾，紧跟 }）
+    // const marker = document.createElement("span");
+    // marker.textContent = " " + (noteData.marker || "❤️");
+
+    // marker.style.cursor = "pointer";
+    // marker.style.background = "#f0f0f0";
+    // marker.style.userSelect = "none";
+
+    // const noteSpan = document.createElement("span");
+    // const hasNote = noteData.note && noteData.note.trim() !== "";
+    // noteSpan.textContent = hasNote ? noteData.note.trim() : "";
+    // // noteSpan.textContent = hasNote ? " " + noteData.note.trim() : "";
+
+    // noteSpan.style.display = hasNote ? "inline" : "none";
+
+    // Object.assign(noteSpan.style, {
+    //     fontStyle: "italic",
+    //     fontSize: "0.85em",
+    //     color: "#880000",
+    //     background: "#f0f0f0",
+    //     marginLeft: "4px",
+    //     padding: "1px 3px",
+    //     borderRadius: "3px"
+    // });
+
+    // endP.appendChild(marker);
+    // endP.appendChild(noteSpan);
+
+
+    // // 起始p浅灰色高亮, 效果一般
+    // for (let i = start; i <= end && i < paragraphs.length; i++) {
+    //     const p = paragraphs[i];
+    //     // p.style.transition = "background 0.6s";
+    //     p.style.background = "#f0f0f0"; // 浅灰色高亮
+    //     // // 可选：轻微动画回退
+    //     // setTimeout(() => {
+    //     //     p.style.background = ""; // 如果想保留高亮可去掉这一行
+    //     // }, 2000);
+    // }
+
+
+    // //插入marker+note
+    // if (end === null || end >= paragraphs.length) return;
+    // const p = paragraphs[end];
+
+    // // 1️⃣ 创建 marker span
+    // const marker = document.createElement("span");
+    // marker.textContent = " " + (noteData.marker || "❤️");
+    // marker.style.cursor = "pointer";
+    // marker.style.userSelect = "none";
+
+    // // 2️⃣ 创建笔记显示 span（小字体斜体，浅灰背景，仅当有内容时显示）
+    // const noteSpan = document.createElement("span");
+    // const hasNote = noteData.note && noteData.note.trim() !== "";
+
+    // // 文本内容显示
+    // noteSpan.textContent = hasNote ? " " + noteData.note.trim() : "";
+    // noteSpan.style.display = hasNote ? "inline" : "none";
+
+    // // 样式统一设置
+    // Object.assign(noteSpan.style, {
+    //     fontStyle: "italic",
+    //     fontSize: "0.85em",
+    //     color: "#880000",
+    //     background: "#f0f0f0",//浅灰色高亮
+    //     marginLeft: "4px",
+    //     padding: "1px 3px",
+    //     borderRadius: "3px"
+    // });
+
+
+    // p.appendChild(marker);
+    // p.appendChild(noteSpan);
 
     // 3️⃣ 点击 marker 弹出底部面板
-    marker.onclick = () => {
+
+    noteContainer.onclick = () => {//marker.onclick
         // 移除已有面板
         const existingPanel = document.getElementById("marker-bottom-panel");
         if (existingPanel) existingPanel.remove();
@@ -404,8 +516,11 @@ function renderMarker(noteData, workId, chapterId) {
             padding: "4px 6px"
         });
         delBtn.onclick = async () => {
-            marker.remove();
-            noteSpan.remove();
+            openBrace.remove();
+            closeBrace.remove();
+            noteContainer.remove();
+            // marker.remove();
+            // noteSpan.remove();
             await deleteNote(noteData.noteId);
             panel.remove();
         };
@@ -507,18 +622,6 @@ function renderEmojiList(container) {
             boxSizing: "border-box"
         });
 
-        // emojis.forEach(e => {
-        //     const item = document.createElement("span");
-        //     item.textContent = e;
-        //     item.dataset.val = e;
-
-        //     Object.assign(item.style, {
-        //         padding: "3px 5px",
-        //         borderRadius: "6px",
-        //         cursor: "pointer",
-        //         userSelect: "none",
-        //         fontSize: "16px"
-        //     });
 
         // ⭐ 点击选择
         item.onclick = () => {
@@ -854,7 +957,7 @@ async function showNotesSummary(workId, currentChapterId) {
 
     // 没有则创建面板
     const panel = document.createElement("div");
-    panel.id = "notes-summary-panel";
+    panel.id = "notes-panel";
     Object.assign(panel.style, {
         position: "fixed",
         top: "0",
@@ -900,6 +1003,9 @@ async function showNotesSummary(workId, currentChapterId) {
     });
     panel.appendChild(infoEl);
 
+
+    //========搜索栏=========
+
     // ===== 按章节分组 =====
     const chaptersMap = {};
     notes.forEach(note => {
@@ -939,25 +1045,54 @@ async function showNotesSummary(workId, currentChapterId) {
 
         // ===== 笔记内容 =====
         chapter.notes.forEach(note => {
-            const noteEl = document.createElement("div");
-            noteEl.style.display = "flex";
-            noteEl.style.flexDirection = "column";
-            noteEl.style.gap = "2px";
-
-            // 原文，截取中间部分显示前后各 10 个字符
+            // TEXTEL 显示原文预览：截取中间部分显示前后各 10 个字符
             const fullText = note.text || "";
-
             const previewText = fullText.length > 24
                 ? fullText.slice(0, 10) + "…" + fullText.slice(-10)
                 : fullText;
 
+            // 创建显示元素
             const textEl = document.createElement("span");
             textEl.textContent = previewText;
             Object.assign(textEl.style, {
                 fontSize: "14px",
-                color: "#555",// "#000",
-                lineHeight: "1.4em"
+                color: "#555",
+                lineHeight: "1.4em",
+                marginRight: "6px" // 给箭头留点间距
             });
+
+            // 是否显示原文的状态
+            let showingFull = false;
+
+            // 创建展开按钮
+            const expandBtn = document.createElement("span");
+            expandBtn.textContent = " [more] ";//"↓";
+            Object.assign(expandBtn.style, {
+                cursor: "pointer",
+                color: "#555",
+                fontSize: "10px",
+                userSelect: "none"
+            });
+
+            // 点击切换
+            expandBtn.onclick = () => {
+                if (!showingFull) {
+                    textEl.textContent = fullText;
+                    expandBtn.textContent = " [less] "; // 变成向上箭头表示可以收起
+                    showingFull = true;
+                } else {
+                    textEl.textContent = previewText;
+                    expandBtn.textContent = " [more] ";
+                    showingFull = false;
+                }
+            };
+
+            // 将文本和按钮添加到容器
+            const container = document.createElement("span"); // span 默认行内
+            container.appendChild(textEl);
+            container.appendChild(expandBtn);
+            chapterContent.appendChild(container);
+
 
             //-----------点击原文内容跳转----------
             textEl.style.cursor = "pointer";
@@ -982,24 +1117,41 @@ async function showNotesSummary(workId, currentChapterId) {
             };
 
 
-            // 笔记内容
+
+
+            // NOTEEL 笔记内容
+            const noteEl = document.createElement("div");
+            noteEl.style.display = "flex";
+            noteEl.style.flexDirection = "column";
+            noteEl.style.gap = "2px";
+
             const noteContent = document.createElement("span");
             noteContent.textContent = note.note || "";
             Object.assign(noteContent.style, {
                 fontSize: "13px",
                 fontStyle: "italic",
                 color: "#880000",
-                background: "#f0f0f0",
+                // background: "#f0f0f0",
                 padding: "1px 3px",
                 borderRadius: "3px",
                 lineHeight: "1.4em",
                 display: note.note && note.note.trim() !== "" ? "inline-block" : "none"
             });
 
-            noteEl.appendChild(textEl);
-            noteEl.appendChild(noteContent);
+            // 笔记修改入口2
 
+            // noteEl.appendChild(textEl);
+            noteEl.appendChild(noteContent);
             chapterContent.appendChild(noteEl);
+
+            //padding around every note
+            // 外层容器，包裹一条笔记
+            const noteWrapper = document.createElement("div");
+            noteWrapper.style.marginBottom = "12px"; // 行间距：12px
+            chapterContent.appendChild(noteWrapper);
+
+
+
         });
 
         panel.appendChild(chapterHeader);
