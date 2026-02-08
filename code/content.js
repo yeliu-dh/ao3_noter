@@ -1331,7 +1331,7 @@ function renderChapters(panel, notes, currentChapterId) {
         const totalNotes = Object.values(work.chapters)
             .reduce((sum, chapter) => sum + chapter.notes.length, 0);
 
-        workHeader.textContent = `${work.title} | by ${work.author} | ${totalNotes} note${totalNotes !== 1 ? "s" : ""}`;
+        workHeader.textContent = `• ${work.title} | by ${work.author} | ${totalNotes} note${totalNotes !== 1 ? "s" : ""}`;
         // workHeader.textContent = work.title;
 
 
@@ -1342,6 +1342,7 @@ function renderChapters(panel, notes, currentChapterId) {
             fontStyle: "italic",
             cursor: "pointer",
             marginTop: "6px",
+            marginBottom: '2px',
             paddingBottom: "2px",
             borderBottom: "2px solid #404040"
         });
@@ -1443,7 +1444,7 @@ function renderNoteRow(note) {
         ? fullText.slice(0, 10) + "…" + fullText.slice(-10)
         : fullText;
     textEl.textContent = "- " + previewText;
-    Object.assign(textEl.style, { fontSize: "14px", color: "#666", cursor: "pointer" });
+    Object.assign(textEl.style, { fontSize: "14px", color: "#404040", cursor: "pointer" });
 
     // scroll:点击文本回滚
     // const backBtn = document.createElement("↩");
