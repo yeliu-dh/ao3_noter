@@ -519,16 +519,16 @@ function renderMarkerUI(noteData) {
 
     // ----- { -----
     const openBrace = document.createElement("span");
-    openBrace.textContent = "{";
+    openBrace.textContent = "/";//"{";
     openBrace.dataset.noteId = noteData.noteId;
-    Object.assign(openBrace.style, { color: "#880000", fontSize: "20px", marginRight: "2px" });
+    Object.assign(openBrace.style, { fontStyle: "bold", color: "#880000", fontSize: "20px", marginRight: "2px" });
     startP.prepend(openBrace);
 
     // ----- } -----
     const closeBrace = document.createElement("span");
-    closeBrace.textContent = "}";
+    closeBrace.textContent = "/";
     closeBrace.dataset.noteId = noteData.noteId;
-    Object.assign(closeBrace.style, { color: "#880000", fontSize: "20px", marginLeft: "2px" });
+    Object.assign(closeBrace.style, { fontStyle: "bold", color: "#880000", fontSize: "20px", marginLeft: "2px" });
     endP.appendChild(closeBrace);
 
 
@@ -536,7 +536,7 @@ function renderMarkerUI(noteData) {
     const marker = document.createElement("span");
     marker.textContent = noteData.marker || "❤️";
     marker.dataset.noteId = noteData.noteId;
-    Object.assign(marker.style, { cursor: "pointer", color: "#880000", marginLeft: "4px" });
+    Object.assign(marker.style, { fontStyle: "bold", fontSize: "14px", color: "#880000", cursor: "pointer", marginLeft: "2px" });
     endP.appendChild(marker);
 
     // ----- noteSpan -----
@@ -601,7 +601,8 @@ function enableInlineEdit(noteSpan, noteData) {
 
         const save = async () => {
             noteData.note = input.value.trim();
-            await updateNote(noteData);//直接更新该notedata所以不用指定id!!
+            await updateNote(noteData); //直接更新该notedata所以不用指定id!!
+            console.log("note updated!")
 
             // 更新 noteSpan 样式
             if (!noteData.note) {
@@ -710,8 +711,6 @@ function bindMarkerMenu(marker, noteSpan, noteData) {
             allEls.forEach(el => el.remove());
             menu.remove();
             await deleteNote(noteData.noteId);
-
-
         };
         menu.appendChild(delBtn);
 
@@ -830,7 +829,7 @@ function renderEmojiList(container) {
     Object.assign(container.style, {
         display: "flex",
         flexWrap: "wrap",      // 自动换行
-        gap: "4px"              // 间距
+        gap: "2px"              // 间距
     });
 
     emojis.forEach(e => {
@@ -842,7 +841,7 @@ function renderEmojiList(container) {
         Object.assign(item.style, {
             width: "18%",        // ⭐ 100% / 5 ≈ 20%，留点 gap
             textAlign: "center",
-            padding: "3px 0",
+            padding: "2px 0",
             borderRadius: "6px",
             cursor: "pointer",
             userSelect: "none",
@@ -1024,6 +1023,11 @@ function renderEmojiRow(container) {
         const span = document.createElement("span");
         span.textContent = e;
         span.className = "ao3-emoji";
+        // span.style.display = "flex";
+        span.style.cursor = "pointer";
+        span.style.color = "#880000";
+        span.marginLeft = "2px";
+        span.marginRight = "2px";
         span.onclick = () => {
             createNoteWithEmoji(e);
         };
@@ -1099,7 +1103,7 @@ async function createNoteWithEmoji(markerEmoji) {
     currentEndParagraphIndex = null;
     if (emojiUI) removeEmojiUI();
 
-    console.log("New note created:", noteData);
+    // console.log("New note created:", noteData);
 }
 
 
@@ -1152,223 +1156,35 @@ function scrollToNote(note) {
     }, 1500);
 }
 
+function createNotesPanel() {
+    // 删除已有面板
+    const existing = document.getElementById("notes-panel");
+    if (existing) existing.remove();
 
-
-async function showNotesSummary(workId, currentChapterId) {
-    // 如果 panel 已存在，直接返回
-    // if (document.getElementById("notes-panel")) return;
-
-    // ✅ 删除已有面板
-    const existingPanel = document.getElementById("notes-panel");
-    if (existingPanel) existingPanel.remove();
-
-    // 没有则创建面板
     const panel = document.createElement("div");
+
     panel.id = "notes-panel";
     Object.assign(panel.style, {
         position: "fixed",
-        top: "0",
-        right: "0",
-        height: "100%",
-        width: "90%",           // 右侧90%屏幕
-        maxWidth: "400px",
+        bottom: "0",
+        left: "0",
+        width: "99%",
+        height: "50%",        // 占屏下半
         background: "#f8f8f8",
-        boxShadow: "-2px 0 6px rgba(0,0,0,0.2)",
+        boxShadow: "0 -2px 6px rgba(0,0,0,0.2)",
         zIndex: 99999,
         padding: "12px",
-        overflowY: "auto",
+        overflowY: "auto",//上下滑动
+        overflowX: "hidden",//?
         fontFamily: "sans-serif",
         display: "flex",
         flexDirection: "column",
-        gap: "12px"
+        gap: "8px",
+        borderTopLeftRadius: "8px",
+        borderTopRightRadius: "8px"
     });
 
-    // ===== 大标题 =====
-    const titleEl = document.createElement("h2");
-    titleEl.textContent = "My Notes";
-    Object.assign(titleEl.style, {
-        margin: "0 0 4px 0",
-        color: "#880000",
-        fontSize: "20px",
-        fontWeight: "bold"
-    });
-    panel.appendChild(titleEl);
-
-    // ===== 作品信息 =====
-    const notes = await loadNotesByWork(workId); // 返回该作品所有 noteData 数组
-    const author = notes[0]?.author || "Unknown";
-    const fandom = notes[0]?.fandom || "Unknown";
-    const workTitle = notes[0]?.title || "Untitled";
-    const totalNotes = notes.length;
-
-    const infoEl = document.createElement("div");
-    infoEl.textContent = `${fandom} | ${workTitle} | ${author} | ${totalNotes} note${totalNotes !== 1 ? "s" : ""}`;
-    Object.assign(infoEl.style, {
-        fontSize: "14px",
-        color: "#404040", //"#555",//深灰色字体
-        marginBottom: "8px"
-    });
-    panel.appendChild(infoEl);
-
-
-    //========搜索栏=========
-
-    // ===== 按章节分组 =====
-    const chaptersMap = {};
-    notes.forEach(note => {
-        if (!chaptersMap[note.chapterId]) chaptersMap[note.chapterId] = { name: note.chapterName, notes: [] };
-        chaptersMap[note.chapterId].notes.push(note);
-    });
-
-    for (const chapterId in chaptersMap) {
-        const chapter = chaptersMap[chapterId];
-
-        // ===== 章节标题 =====
-        const chapterHeader = document.createElement("div");
-        chapterHeader.textContent = chapter.name;
-        Object.assign(chapterHeader.style, {
-            // fontWeight: "bold",
-            fontSize: "16px",
-            color: "#404040",//"#880000",
-            cursor: "pointer",
-            marginTop: "12px",
-            marginBottom: "4px",
-            borderBottom: "1px solid #ccc",
-            paddingBottom: "2px"
-        });
-
-        // ===== 章节内容容器（折叠） =====
-        const chapterContent = document.createElement("div");
-        chapterContent.style.display = chapterId === currentChapterId ? "block" : "none"; // 默认展开当前章节
-        chapterContent.style.flexDirection = "column";
-        chapterContent.style.gap = "6px";
-        chapterContent.style.marginLeft = "6px";
-
-
-        // 点击章节标题切换折叠
-        chapterHeader.onclick = () => {
-            chapterContent.style.display = chapterContent.style.display === "none" ? "block" : "none";
-        };
-
-        // ===== 笔记内容 =====
-        chapter.notes.forEach(note => {
-            // TEXTEL 显示原文预览：截取中间部分显示前后各 10 个字符
-            const fullText = note.text || "";
-
-            // 创建显示元素
-            const textEl = document.createElement("span");
-            textEl.textContent = fullText;
-
-            // 显示预览文本呢
-            // const previewText = fullText.length > 24
-            //     ? fullText.slice(0, 10) + "…" + fullText.slice(-10)
-            //     : fullText;
-            // textEl.textContent = previewText;
-            // Object.assign(textEl.style, {
-            //     fontSize: "14px",
-            //     color: "#555",
-            //     lineHeight: "1.4em",
-            //     marginRight: "6px" // 给箭头留点间距
-            // });
-
-            // // 是否显示原文的状态
-            // let showingFull = false;
-
-            // // 创建展开按钮
-            // const expandBtn = document.createElement("span");
-            // expandBtn.textContent = " [more] ";//"↓";
-            // Object.assign(expandBtn.style, {
-            //     cursor: "pointer",
-            //     color: "#555",
-            //     fontSize: "10px",
-            //     userSelect: "none"
-            // });
-
-            // // 点击切换
-            // expandBtn.onclick = () => {
-            //     if (!showingFull) {
-            //         textEl.textContent = fullText;
-            //         expandBtn.textContent = " [less] "; // 变成向上箭头表示可以收起
-            //         showingFull = true;
-            //     } else {
-            //         textEl.textContent = previewText;
-            //         expandBtn.textContent = " [more] ";
-            //         showingFull = false;
-            //     }
-            // };
-
-            // 将文本和按钮添加到容器
-            const container = document.createElement("span"); // span 默认行内
-            container.appendChild(textEl);
-            // container.appendChild(expandBtn);
-            chapterContent.appendChild(container);
-
-
-            //-----------点击原文内容跳转----------
-            textEl.style.cursor = "pointer";
-            textEl.onclick = () => {
-                const currentChapter = getCurrentChapter().id;
-
-                if (currentChapter === note.chapterId) {
-                    // 已在本章 → 滚动定位
-                    scrollToNote(note);
-
-                } else {
-
-                    // 不在本章 → 跳转章节
-                    //保存note数据到session！
-                    sessionStorage.setItem(
-                        "jumpToNote",
-                        JSON.stringify(note)
-                    );
-                    const url = `/works/${note.workId}/chapters/${note.chapterId}`;
-                    window.location.href = url;
-                }
-            };
-
-
-
-
-            // NOTEEL 笔记内容
-            const noteEl = document.createElement("div");
-            noteEl.style.display = "flex";
-            noteEl.style.flexDirection = "column";
-            noteEl.style.gap = "2px";
-
-            const noteContent = document.createElement("span");
-            noteContent.textContent = note.note || "";
-            Object.assign(noteContent.style, {
-                fontSize: "13px",
-                fontStyle: "italic",
-                color: "#880000",
-                // background: "#f0f0f0",
-                padding: "1px 3px",
-                borderRadius: "3px",
-                lineHeight: "1.4em",
-                display: note.note && note.note.trim() !== "" ? "inline-block" : "none"
-            });
-
-            // 笔记修改入口2
-
-            // noteEl.appendChild(textEl);
-            noteEl.appendChild(noteContent);
-            chapterContent.appendChild(noteEl);
-
-            //padding around every note
-            // 外层容器，包裹一条笔记
-            const noteWrapper = document.createElement("div");
-            noteWrapper.style.marginBottom = "12px"; // 行间距：12px
-            chapterContent.appendChild(noteWrapper);
-
-
-
-        });
-
-        panel.appendChild(chapterHeader);
-        panel.appendChild(chapterContent);
-    }
-
-    // ===== 添加关闭按钮 =====
+    // 关闭按钮
     const closeBtn = document.createElement("span");
     closeBtn.textContent = "×";
     Object.assign(closeBtn.style, {
@@ -1383,37 +1199,374 @@ async function showNotesSummary(workId, currentChapterId) {
     closeBtn.onclick = () => panel.remove();
     panel.appendChild(closeBtn);
 
-    document.body.appendChild(panel);
+    // 点击空白关闭
+    setTimeout(() => { // 延迟绑定，防止立即触发自身
+        document.addEventListener("mousedown", function closePanel(e) {
+            if (!panel.contains(e.target)) {
+                panel.remove();
+                document.removeEventListener("mousedown", closePanel);
+            }
+        });
+    }, 0);
 
+    // 大标题
+    const titleEl = document.createElement("h2");
+    titleEl.textContent = "My Notes";
+    Object.assign(titleEl.style, { margin: "0 0 8px 0", color: "#880000", fontSize: "20px", fontWeight: "bold" });
+    panel.appendChild(titleEl)
+    return panel;
+}
+
+// ========================
+// 2️⃣ 渲染 work 信息
+// ========================
+// function renderWorkInfo(panel, notes) {
+//     const workTitle = notes[0]?.title || "Untitled";
+//     const author = notes[0]?.author || "Unknown";
+//     const totalNotes = notes.length;
+
+//     const infoEl = document.createElement("div");
+//     infoEl.textContent = `${workTitle} | ${author} | ${totalNotes} note${totalNotes !== 1 ? "s" : ""}`;
+//     Object.assign(infoEl.style, { fontSize: "16px", fontStyle: "bold", fontStyle: "italic", color: "#404040", marginBottom: "8px" });
+//     panel.appendChild(infoEl);
+// }
+
+// ========================
+// 3️⃣ 渲染章节和笔记
+// ========================
+// function renderChapters(panel, notes, currentChapterId) {
+//     // 按 chapterId 分组
+//     const chaptersMap = {};
+//     notes.forEach(note => {
+//         if (!chaptersMap[note.chapterId]) chaptersMap[note.chapterId] = { name: note.chapterName, notes: [] };
+//         chaptersMap[note.chapterId].notes.push(note);
+//     });
+
+//     // 按章节顺序渲染
+//     Object.keys(chaptersMap).sort().forEach((chapterId, idx) => {
+//         const chapter = chaptersMap[chapterId];
+
+//         // 一级标题：章节
+//         const chapterHeader = document.createElement("div");
+//         chapterHeader.textContent = `${chapter.name}`;
+//         Object.assign(chapterHeader.style, {
+//             fontSize: "14px",
+//             color: "#404040",
+//             fontWeight: "bold",
+//             cursor: "pointer",
+//             marginTop: "8px",
+//             marginBottom: "2px",
+//             borderBottom: "1px solid #ccc",
+//             paddingBottom: "2px"
+//         });
+
+//         // 二级容器
+//         const chapterContent = document.createElement("div");
+//         chapterContent.style.display = chapterId === currentChapterId ? "block" : "none";
+//         chapterContent.style.flexDirection = "column";
+//         chapterContent.style.gap = "8px";
+//         chapterContent.style.marginLeft = "12px";
+
+//         // 点击章节标题折叠/展开
+//         chapterHeader.onclick = () => {
+//             chapterContent.style.display = chapterContent.style.display === "none" ? "block" : "none";
+//         };
+
+//         // 渲染每条笔记
+//         chapter.notes.forEach(note => {
+//             const noteRow = renderNoteRow(note);
+//             chapterContent.appendChild(noteRow);
+//         });
+
+//         panel.appendChild(chapterHeader);
+//         panel.appendChild(chapterContent);
+//     });
+// }
+
+
+// work-chap-notes
+function renderChapters(panel, notes, currentChapterId) {
+
+    // ========================
+    // 1️⃣ 按 work -> chapter 分组
+    // ========================
+    const worksMap = {};
+
+    notes.forEach(note => {
+        if (!worksMap[note.workId]) {
+            worksMap[note.workId] = {
+                title: note.title || "Untitled",
+                author: note.author || "Anonymous",
+                chapters: {}
+            };
+        }
+
+        const chapters = worksMap[note.workId].chapters;
+
+        if (!chapters[note.chapterId]) {
+            chapters[note.chapterId] = {
+                name: note.chapterName,
+                notes: []
+            };
+        }
+
+        chapters[note.chapterId].notes.push(note);
+    });
+
+
+    // ========================
+    // 2️⃣ 渲染 work
+    // ========================
+    Object.keys(worksMap).forEach(workId => {
+        const work = worksMap[workId];
+
+        // Work Header
+        const workHeader = document.createElement("div");
+        Object.assign(workHeader.style, {
+            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontStyle: "italic"
+        });
+
+        // ⭐ 计算 totalNotes
+        const totalNotes = Object.values(work.chapters)
+            .reduce((sum, chapter) => sum + chapter.notes.length, 0);
+
+        workHeader.textContent = `${work.title} | by ${work.author} | ${totalNotes} note${totalNotes !== 1 ? "s" : ""}`;
+        // workHeader.textContent = work.title;
+
+
+        Object.assign(workHeader.style, {
+            fontSize: "15px",
+            fontWeight: "bold",
+            color: '#404040',//"#880000",
+            fontStyle: "italic",
+            cursor: "pointer",
+            marginTop: "6px",
+            paddingBottom: "2px",
+            borderBottom: "2px solid #404040"
+        });
+
+        // Work Content
+        const workContent = document.createElement("div");
+        Object.assign(workContent.style, {
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            marginLeft: "8px"
+        });
+
+        // 折叠
+        workHeader.onclick = () => {
+            workContent.style.display =
+                workContent.style.display === "none" ? "flex" : "none";
+        };
+
+
+        // ========================
+        // 3️⃣ 渲染 chapter
+        // ========================
+        Object.keys(work.chapters)
+            .sort()
+            .forEach(chapterId => {
+
+                const chapter = work.chapters[chapterId];
+
+                const chapterHeader = document.createElement("div");
+                chapterHeader.textContent = chapter.name;
+
+                Object.assign(chapterHeader.style, {
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#404040",
+                    cursor: "pointer",
+                    // borderBottom: "1px solid #ccc",
+                    paddingBottom: "2px"
+                });
+
+                const chapterContent = document.createElement("div");
+
+                Object.assign(chapterContent.style, {
+                    display: chapterId === currentChapterId ? "flex" : "none",
+                    flexDirection: "column",
+                    gap: "10px",              // ⭐ 笔记间距
+                    marginLeft: "12px",
+                    marginTop: "4px"
+                });
+
+                // 折叠章节
+                chapterHeader.onclick = () => {
+                    chapterContent.style.display =
+                        chapterContent.style.display === "none" ? "flex" : "none";
+                };
+
+                // ========================
+                // 4️⃣ 渲染 notes
+                // ========================
+                chapter.notes.forEach(note => {
+                    const noteRow = renderNoteRow(note);
+
+                    // ⭐ 轻量视觉分隔（不改原函数）
+                    Object.assign(noteRow.style, {
+                        paddingBottom: "4px",
+                        // borderBottom: "1px solid #eee"
+                    });
+
+                    chapterContent.appendChild(noteRow);
+                });
+
+                workContent.appendChild(chapterHeader);
+                workContent.appendChild(chapterContent);
+            });
+
+        panel.appendChild(workHeader);
+        panel.appendChild(workContent);
+    });
+}
+
+
+// ========================
+// 4️⃣ 渲染单条笔记行
+// margin = 元素之间距离
+// padding = 内容与边框距离
+// ========================
+function renderNoteRow(note) {
+    const container = document.createElement("div");
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "3px";
+    container.style.marginLeft = "5px";
+
+    // text preview
+    const textEl = document.createElement("span");
+    const fullText = note.text || "";
+    const previewText = fullText.length > 24
+        ? fullText.slice(0, 10) + "…" + fullText.slice(-10)
+        : fullText;
+    textEl.textContent = "- " + previewText;
+    Object.assign(textEl.style, { fontSize: "14px", color: "#666", cursor: "pointer" });
+
+    // scroll:点击文本回滚
+    // const backBtn = document.createElement("↩");
+    textEl.onclick = () => {
+        const currentChapter = getCurrentChapter().id;
+        if (currentChapter === note.chapterId) {
+            // 已在本章 → 滚动定位
+            scrollToNote(note);
+
+        } else {
+
+            // 不在本章 → 跳转章节
+            //保存note数据到session！
+            sessionStorage.setItem(
+                "jumpToNote",
+                JSON.stringify(note)
+            );
+            const url = `/works/${note.workId}/chapters/${note.chapterId}`;
+            window.location.href = url;
+        }
+    };
+
+    // note
+    const noteEl = document.createElement("span");
+    noteEl.textContent = note.note || "";
+    Object.assign(noteEl.style, {
+        fontSize: "13px", fontStyle: "italic", color: "#880000",
+        marginLeft: "2px", cursor: "text", marginBottom: "8px",
+    });
+
+    // Panel 内支持 inline edit ： text + note
+    // enableInlineEditPanel(textEl, note, "text");
+    enableInlineEditPanel(noteEl, note, "note");
+
+
+    container.appendChild(textEl);
+    container.appendChild(noteEl);
+    return container;
+}
+
+// ========================
+// 5️⃣ inline edit
+// ========================
+
+function enableInlineEditPanel(el, noteData, field) {
+    el.onclick = (e) => {
+        e.stopPropagation();
+        // 避免重复创建 input
+        if (el.querySelector("input")) return;
+
+        const oldValue = noteData[field] || "";
+        const input = document.createElement("input");
+        input.value = oldValue;
+        Object.assign(input.style, {
+            fontSize: "14px",
+            border: "1px solid #880000",
+            padding: "2px 4px",
+            borderRadius: "2px",
+            width: "100%"
+        });
+
+        el.replaceWith(input);
+        input.focus();
+
+        const save = async () => {
+            noteData[field] = input.value;
+            await updateNote(noteData); // 更新数据库或内存
+            refreshNote(noteData, noteData.workId, noteData.chapterId);//更新
+
+            el.textContent = input.value;
+            input.replaceWith(el);
+        };
+
+        input.addEventListener("blur", save);
+        input.addEventListener("keydown", e => { if (e.key === "Enter") save(); });
+    };
+}
+
+// ========================
+// 6️⃣ 主入口
+// ========================
+async function showNotesSummary(workId, currentChapterId) {
+    const panel = createNotesPanel();
+    const notes = await loadNotesByWork(workId); // 获取该作品所有笔记
+    // console.log("notes of this work:", notes)
+    // renderWorkInfo(panel, notes);
+    renderChapters(panel, notes, currentChapterId);
+
+    document.body.appendChild(panel);//** */
 }
 
 
 
-// ======= 📑 Marker & Panel Demo =======
-// 创建右上角 panelmarker
+// ====== Panel Marker（右上角按钮） ======
 const panelMarker = document.createElement("span");
-
-panelMarker.textContent = "🗎",// MARKER_CLOSED;   // 初始默认折角
-    Object.assign(panelMarker.style, {
-        position: "fixed",
-        top: "10px",
-        right: "10px",
-        fontStyle: "bold",
-        fontSize: "24px",
-        color: "#880000",
-        cursor: "pointer",
-        zIndex: 99999//数字越大，越顶层
-    });
+panelMarker.textContent = "🗎"; // 面板图标
+Object.assign(panelMarker.style, {
+    position: "fixed",
+    bottom: "10px",
+    right: "10px",
+    fontStyle: "bold",
+    fontSize: "24px",
+    color: "#880000",
+    cursor: "pointer",
+    zIndex: 99999
+});
 document.body.appendChild(panelMarker);
 
+//check
 panelMarker.onclick = async () => {
-    if (document.getElementById("notes-panel")) return;
+    const existing = document.getElementById("notes-panel");
+    if (existing) { console.log("Panel already exists"); return; }
 
     const workId = getWorkId();
-    const currentChapterId = getCurrentChapter().id;
+    const currentChapterId = getCurrentChapter()?.id;
+
+    if (!workId || !currentChapterId) return;
 
     await showNotesSummary(workId, currentChapterId);
+
 };
+
+
 
 
 
@@ -1528,29 +1681,3 @@ window.addEventListener("load", async () => {
 
 
 });
-
-// //------------------跳转后有jumpToNote临时保存则scroll-------------------
-// window.addEventListener("load", async () => {
-
-//     // ===== 1️⃣ 正常渲染 markers =====
-//     const workId = getWorkId();
-//     const notes = await loadNotesByWork(workId);
-//     notes.forEach(n => renderMarker(n, n.workId, n.chapterId));
-
-
-//     // ===== 2️⃣ 检查是否有跳转定位 =====
-//     const pending = sessionStorage.getItem("jumpToNote");
-
-//     if (pending) {
-
-//         sessionStorage.removeItem("jumpToNote");
-
-//         const note = JSON.parse(pending);
-
-//         // ⭐ 等 AO3 页面完全布局好再滚动
-//         setTimeout(() => {
-//             scrollToNote(note);
-//         }, 350);
-//     }
-
-// });

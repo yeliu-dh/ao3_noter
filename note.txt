@@ -137,3 +137,24 @@ hot，melting heart, sparkling, sad face
 | dict     | Object           |
 | None     | null             |
 | True     | true             |
+
+| 类型             | 特点                                   | 举例                           |
+| -------------- | ------------------------------------ | ---------------------------- |
+| `block`        | 块级元素，独占一行，上下会换行                      | `<div>`, `<p>`               |
+| `inline`       | 行内元素，不独占一行，宽高受内容控制                   | `<span>`, `<a>`              |
+| `inline-block` | 类似行内元素，但可以设置宽高                       | `<img>` 常用                   |
+| `flex`         | 块级 flex 容器，子元素可横向或纵向排列               | `div.style.display = "flex"` |
+| `inline-flex`  | 行内 flex 容器，子元素可横向或纵向排列，但整个容器跟文本一样在一行 | 常用于按钮 + 文本组合                 |
+| `grid`         | CSS Grid 容器，支持行列布局                   | `div.style.display = "grid"` |
+| `inline-grid`  | 行内 grid 容器                           | 罕用                           |
+| `none`         | 隐藏元素                                 | 任何元素隐藏时使用                    |
+
+
+
+
+inline edit后note显示在括号内
+pad中在text前加上backBtn返回   
+
+
+默认仅load当前work的notes，设计ALL按钮
+panel内查询查询功能？
