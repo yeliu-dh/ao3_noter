@@ -158,3 +158,30 @@ pad中在text前加上backBtn返回
 
 默认仅load当前work的notes，设计ALL按钮
 panel内查询查询功能？
+
+
+点击作品再导入笔记
+以来ao3实现跨平台sync
+free notes
+
+
+
+
+去掉workheader的下划线
+
+
+chap淡化，灰色字体？
+--------------------chap  n-------------------
+--------------------chap  n-------------------
+--------------------chap  n-------------------
+
+选中文本，mark, 显示/XXXX/高亮？前后p，
+点击高亮，delete/write，直接显示
+note 允许inline edit
+
+
+pad中原文后面加上delete按钮
+
+
+
+
