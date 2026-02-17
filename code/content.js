@@ -968,37 +968,250 @@ function scrollToNote(note) {
 }
 
 
-function createNotesPanel() {
-    // notepad初始格式：位置，my notes标题，关闭按钮，点击空白关闭
+// function createNotesPanel() {
+//      //固定50%面板
+//     // notepad初始格式：位置，my notes标题，关闭按钮，点击空白关闭
 
-    // 删除已有面板
+//     // 删除已有面板
+//     const existing = document.getElementById("notes-panel");
+//     if (existing) existing.remove();
+
+//     const panel = document.createElement("div");
+
+//     panel.id = "notes-panel";
+//     Object.assign(panel.style, {
+//         position: "fixed",
+//         bottom: "0",
+//         left: "0",
+//         width: "99%",
+//         height: "50%",        // 占屏下半
+//         background: "#f8f8f8",
+//         boxShadow: "0 -2px 6px rgba(0,0,0,0.2)",
+//         zIndex: 99999,
+//         padding: "12px",
+//         overflowY: "auto",//上下滑动
+//         overflowX: "hidden",//?
+//         fontFamily: "sans-serif",
+//         display: "flex",
+//         flexDirection: "column",
+//         gap: "8px",
+//         borderTopLeftRadius: "8px",
+//         borderTopRightRadius: "8px"
+//     });
+
+//     // 关闭按钮
+//     const closeBtn = document.createElement("span");
+//     closeBtn.textContent = "×";
+//     Object.assign(closeBtn.style, {
+//         position: "absolute",
+//         top: "6px",
+//         right: "12px",
+//         fontSize: "20px",
+//         fontWeight: "bold",
+//         cursor: "pointer",
+//         color: "#880000"
+//     });
+//     closeBtn.onclick = () => panel.remove();
+//     panel.appendChild(closeBtn);
+
+//     // 点击空白关闭
+//     setTimeout(() => { // 延迟绑定，防止立即触发自身
+//         document.addEventListener("mousedown", function closePanel(e) {
+//             if (!panel.contains(e.target)) {
+//                 panel.remove();
+//                 document.removeEventListener("mousedown", closePanel);
+//             }
+//         });
+//     }, 0);
+
+//     // 大标题
+//     const titleEl = document.createElement("h2");
+//     titleEl.textContent = "My Notes";
+//     Object.assign(titleEl.style, { margin: "0 0 8px 0", color: "#880000", fontSize: "20px", fontWeight: "bold" });
+//     panel.appendChild(titleEl)
+//     return panel;
+// }
+
+
+
+
+// function createNotesPanel() {
+//     //无极调剂
+//     // 删除已有面板
+//     const existing = document.getElementById("notes-panel");
+//     if (existing) existing.remove();
+
+//     const panel = document.createElement("div");
+//     panel.id = "notes-panel";
+
+//     Object.assign(panel.style, {
+//         position: "fixed",
+//         bottom: "0",
+//         left: "0",
+//         width: "99%",
+//         height: "50%",        // 默认占屏下半
+//         background: "#f8f8f8",
+//         boxShadow: "0 -2px 6px rgba(0,0,0,0.2)",
+//         zIndex: 99999,
+//         padding: "12px",
+//         overflowY: "auto",
+//         overflowX: "hidden",
+//         fontFamily: "sans-serif",
+//         display: "flex",
+//         flexDirection: "column",
+//         gap: "8px",
+//         borderTopLeftRadius: "8px",
+//         borderTopRightRadius: "8px"
+//     });
+
+//     // -----------------------
+//     // 可拖拽调节高度条
+//     // -----------------------
+//     const resizeBar = document.createElement("div");
+//     Object.assign(resizeBar.style, {
+//         height: "6px",
+//         cursor: "ns-resize",
+//         background: "#ccc",
+//         borderRadius: "3px",
+//         marginBottom: "6px"
+//     });
+//     panel.appendChild(resizeBar);
+
+//     let isDragging = false;
+//     let startY, startHeight;
+
+//     resizeBar.addEventListener("mousedown", (e) => {
+//         isDragging = true;
+//         startY = e.clientY;
+//         startHeight = panel.offsetHeight;
+//         document.body.style.userSelect = "none"; // 防止拖动时选中页面
+//     });
+
+//     document.addEventListener("mousemove", (e) => {
+//         if (!isDragging) return;
+//         const dy = startY - e.clientY; // 上拉高度增加
+//         let newHeight = startHeight + dy;
+//         const maxHeight = window.innerHeight * 0.95;
+//         const minHeight = 100; // 最小高度
+//         if (newHeight > maxHeight) newHeight = maxHeight;
+//         if (newHeight < minHeight) newHeight = minHeight;
+//         panel.style.height = newHeight + "px";
+//     });
+
+//     document.addEventListener("mouseup", () => {
+//         isDragging = false;
+//         document.body.style.userSelect = "";
+//     });
+
+//     // -----------------------
+//     // 关闭按钮
+//     // -----------------------
+//     const closeBtn = document.createElement("span");
+//     closeBtn.textContent = "×";
+//     Object.assign(closeBtn.style, {
+//         position: "absolute",
+//         top: "6px",
+//         right: "12px",
+//         fontSize: "20px",
+//         fontWeight: "bold",
+//         cursor: "pointer",
+//         color: "#880000"
+//     });
+//     closeBtn.onclick = () => panel.remove();
+//     panel.appendChild(closeBtn);
+
+//     // 点击空白关闭
+//     setTimeout(() => {
+//         document.addEventListener("mousedown", function closePanel(e) {
+//             if (!panel.contains(e.target)) {
+//                 panel.remove();
+//                 document.removeEventListener("mousedown", closePanel);
+//             }
+//         });
+//     }, 0);
+
+//     // 大标题
+//     const titleEl = document.createElement("h2");
+//     titleEl.textContent = "My Notes";
+//     Object.assign(titleEl.style, { margin: "0 0 8px 0", color: "#880000", fontSize: "20px", fontWeight: "bold" });
+//     panel.appendChild(titleEl);
+
+//     return panel;
+// }
+
+
+function createNotesPanel() {
     const existing = document.getElementById("notes-panel");
     if (existing) existing.remove();
 
     const panel = document.createElement("div");
-
     panel.id = "notes-panel";
+
     Object.assign(panel.style, {
         position: "fixed",
         bottom: "0",
         left: "0",
         width: "99%",
-        height: "50%",        // 占屏下半
+        height: "50%",          // 默认高度
         background: "#f8f8f8",
         boxShadow: "0 -2px 6px rgba(0,0,0,0.2)",
         zIndex: 99999,
         padding: "12px",
-        overflowY: "auto",//上下滑动
-        overflowX: "hidden",//?
+        overflowY: "auto",
+        overflowX: "hidden",
         fontFamily: "sans-serif",
         display: "flex",
         flexDirection: "column",
         gap: "8px",
         borderTopLeftRadius: "8px",
-        borderTopRightRadius: "8px"
+        borderTopRightRadius: "8px",
+        transition: "height 0.2s ease" // 平滑动画
     });
 
+    // --------------------------
+    // 手指拖动手柄
+    // --------------------------
+    const handle = document.createElement("div");
+    Object.assign(handle.style, {
+        height: "5px",
+        width: "60px",
+        background: "#ccc",
+        borderRadius: "8px",
+        alignSelf: "center",
+        marginBottom: "8px",
+        cursor: "ns-resize"
+    });
+    panel.appendChild(handle);
+
+    let startY = 0;
+    let startHeight = 0;
+    let dragging = false;
+
+    handle.addEventListener("touchstart", (e) => {
+        dragging = true;
+        startY = e.touches[0].clientY;
+        startHeight = panel.offsetHeight;
+        e.preventDefault();
+    });
+
+    handle.addEventListener("touchmove", (e) => {
+        if (!dragging) return;
+        const dy = startY - e.touches[0].clientY; // 上滑增加高度
+        let newHeight = startHeight + dy;
+        const maxHeight = window.innerHeight * 0.95;
+        const minHeight = 100;
+        if (newHeight > maxHeight) newHeight = maxHeight;
+        if (newHeight < minHeight) newHeight = minHeight;
+        panel.style.height = newHeight + "px";
+    });
+
+    handle.addEventListener("touchend", () => {
+        dragging = false;
+    });
+
+    // --------------------------
     // 关闭按钮
+    // --------------------------
     const closeBtn = document.createElement("span");
     closeBtn.textContent = "×";
     Object.assign(closeBtn.style, {
@@ -1014,7 +1227,7 @@ function createNotesPanel() {
     panel.appendChild(closeBtn);
 
     // 点击空白关闭
-    setTimeout(() => { // 延迟绑定，防止立即触发自身
+    setTimeout(() => {
         document.addEventListener("mousedown", function closePanel(e) {
             if (!panel.contains(e.target)) {
                 panel.remove();
@@ -1027,9 +1240,13 @@ function createNotesPanel() {
     const titleEl = document.createElement("h2");
     titleEl.textContent = "My Notes";
     Object.assign(titleEl.style, { margin: "0 0 8px 0", color: "#880000", fontSize: "20px", fontWeight: "bold" });
-    panel.appendChild(titleEl)
+    panel.appendChild(titleEl);
+
     return panel;
 }
+
+
+
 
 
 // function renderChapters(panel, notes, currentChapterId) {
@@ -1597,23 +1814,6 @@ panelMarker.onclick = async () => {
 
 
 
-
-// Lazy Fetch（延迟加载）
-/*
-🔍 Search
-————————————
-▶ 当前作品 (展开)
-    ▶ Chapter 1
-    ▶ Chapter 2
-
-▶ 其他作品A (折叠)
-▶ 其他作品B (折叠)
-▶ 其他作品C (折叠)
-*/
-
-
-
-
 // =================================== 事件监听 (放最后) ============================
 
 let emojiUI = null;
@@ -1692,20 +1892,6 @@ function removeEmojiUI() {
         emojiUI = null;
     }
 }
-
-
-// Object.assign(panel.style, {
-//         position: "absolute",
-//         background: "white",
-//         border: "1px solid #ddd",
-//         borderRadius: "10px",
-//         padding: "10px",
-//         zIndex: 999999,
-
-//         maxWidth: "92vw",        // ✅ 不超过屏幕
-//         boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-//         fontSize: "16px"
-//     });
 
 
 
